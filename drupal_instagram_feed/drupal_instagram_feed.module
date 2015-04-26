@@ -1,0 +1,139 @@
+<?php
+
+function drupal_instagram_feed_admin() {
+    $form = array();
+
+    $form['drupal_instagram_feed_user_id'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Instagram User ID',
+        '#default_value' => variable_get('drupal_instagram_feed_user_id', ''),
+        '#description' => '',
+        '#required' => TRUE,
+    );
+    $form['drupal_instagram_feed_access_token'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Instagram Access Token',
+        '#default_value' => variable_get('drupal_instagram_feed_access_token', ''),
+        '#description' => '',
+        '#required' => TRUE,
+    );
+
+    return system_settings_form($form);
+}
+
+function drupal_instagram_feed_menu() {
+    $items = array();
+
+    $items['admin/config/services/drupal_instagram_feed'] = array(
+        'title' => 'Drupal Instagram Feed Settings',
+        'description' => 'Enter authentication settings for the Drupal Instagram Feed module',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('drupal_instagram_feed_admin'),
+        'access arguments' => array('administer drupal_instagram_feed'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+    return $items;
+}
+
+function drupal_instagram_feed_permission() {
+    $permissions = array(
+        "administer drupal_instagram_feed" => array(
+            'title' => t('Administer the Drupal Instagram Feed'),
+            'description' => t('Change authentication settings for the Drupal Instagram Feed module')
+        ),
+    );
+
+    return $permissions;
+}
+
+function drupal_instagram_feed_block_info() {
+
+
+    $blocks[0]['info'] = t('Instagram Feed');
+    $blocks[0]['cache'] = DRUPAL_NO_CACHE;
+
+    return $blocks;
+}
+
+function drupal_instagram_feed_block_configure($delta = 0) {
+    $form = array();
+    if ($delta == 0) {
+        $form['drupal_instagram_feed_num_images'] = array(
+            '#type' => 'select',
+            '#title' => t('Number of images to display'),
+            '#default_value' => variable_get('drupal_instagram_feed_num_images', 5),
+            '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)),
+        );
+        $form['drupal_instagram_feed_image_size'] = array(
+            '#type' => 'select',
+            '#title' => t('Thumbnail image size'),
+            '#default_value' => variable_get('drupal_instagram_feed_image_size', 'thumbnail'),
+            '#options' => array(
+                'thumbnail' => t('Thumbnail (150x150)'),
+                'low_resolution' => t('Low resolution (306x306)'),
+                'standard_resolution' => t('Standard resolution (612x612)')
+            ),
+        );
+        $form['drupal_instagram_feed_template'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Template'),
+            '#description' => t('(Optional) Specify a template to display the returned images.'),
+            '#default_value' => variable_get('drupal_instagram_feed_template', '<a href="{{link}}" target="_blank"><img src="{{image}}" /></a>'),
+            '#size' => 60,
+            '#maxlength' => 255,
+            '#required' => FALSE,
+        );
+    }
+    return $form;
+}
+
+function drupal_instagram_feed_block_save($delta = 0, $edit = array()) {
+    if ($delta == 0) {
+        variable_set('drupal_instagram_feed_num_images', $edit['drupal_instagram_feed_num_images']);
+        variable_set('drupal_instagram_feed_image_size', $edit['drupal_instagram_feed_image_size']);
+        variable_set('drupal_instagram_feed_template', $edit['drupal_instagram_feed_template']);
+    }
+}
+
+function drupal_instagram_feed_block_view($delta = 0) {
+    drupal_add_js(drupal_get_path('module', 'drupal_instagram_feed') . '/js/scripts.js');
+
+    drupal_add_js(
+        array(
+            'drupal_instagram_feed' => array(
+                'access_token' => variable_get('drupal_instagram_feed_access_token', ''),
+                'user_id' => variable_get('drupal_instagram_feed_user_id', ''),
+                'image_size' => variable_get('drupal_instagram_feed_image_size', 'thumbnail'),
+                'num_images' => variable_get('drupal_instagram_feed_num_images', 5),
+                'template' => variable_get('drupal_instagram_feed_template', '<a href="{{link}}" target="_blank"><img src="{{image}}" /></a>')
+            ),
+        ),
+        'setting'
+    );
+
+    $setup_complete = FALSE;
+    if (variable_get('drupal_instagram_feed_access_token') && variable_get('drupal_instagram_feed_user_id')) {
+        $setup_complete = TRUE;
+    }
+
+    if ($delta == 0) {
+        $block['subject'] = null;
+        $block['content'] = theme('drupal_instagram_feed', array(
+            "setup_complete" => $setup_complete,
+            "settings_path" => "/admin/config/services/drupal_instagram_feed"
+        ));
+
+        return $block;
+    }
+}
+
+function drupal_instagram_feed_theme() {
+    return array(
+        'drupal_instagram_feed' => array(
+            'variables' => array(
+                'setup_complete' => NULL
+            ),
+            'template' => 'drupal_instagram_feed',
+        )
+    );
+}
