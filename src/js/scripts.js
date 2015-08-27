@@ -12,6 +12,8 @@ Drupal.behaviors.drupal_instagram_feed = {
             template: Drupal.settings.drupal_instagram_feed.template
         });
 
-        feed.run();
+        if (document.getElementById("instafeed")) {
+            feed.run();
+        }
     }
 };
