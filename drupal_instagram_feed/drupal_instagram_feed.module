@@ -10,6 +10,13 @@ function drupal_instagram_feed_admin() {
         '#description' => '',
         '#required' => TRUE,
     );
+    $form['drupal_instagram_feed_client_id'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Instagram Client ID',
+      '#default_value' => variable_get('drupal_instagram_feed_client_id', ''),
+      '#description' => '',
+      '#required' => TRUE,
+    );
     $form['drupal_instagram_feed_access_token'] = array(
         '#type' => 'textfield',
         '#title' => 'Instagram Access Token',
@@ -102,6 +109,7 @@ function drupal_instagram_feed_block_view($delta = 0) {
         array(
             'drupal_instagram_feed' => array(
                 'access_token' => variable_get('drupal_instagram_feed_access_token', ''),
+                'client_id' => variable_get('drupal_instagram_feed_client_id', ''),
                 'user_id' => variable_get('drupal_instagram_feed_user_id', ''),
                 'image_size' => variable_get('drupal_instagram_feed_image_size', 'thumbnail'),
                 'num_images' => variable_get('drupal_instagram_feed_num_images', 5),
@@ -112,7 +120,7 @@ function drupal_instagram_feed_block_view($delta = 0) {
     );
 
     $setup_complete = FALSE;
-    if (variable_get('drupal_instagram_feed_access_token') && variable_get('drupal_instagram_feed_user_id')) {
+    if (variable_get('drupal_instagram_feed_access_token') && variable_get('drupal_instagram_feed_user_id') && variable_get('drupal_instagram_feed_client_id')) {
         $setup_complete = TRUE;
     }
 
